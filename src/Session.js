@@ -7,6 +7,7 @@ class Session{
         this._papers=[];
         this._bids=[];
         this._stage="Receiving";
+        this._assignments=new Map();
     }
     name(){
         return this._name;
@@ -70,6 +71,38 @@ class Session{
     }
     interestFor(paper, reviewer){
         return this.bidFor(paper, reviewer).interest();
+    }
+    interestOrDefaultFor(paper, reviewer){
+        if(this.bidExistsFor(paper, reviewer))
+            return this.interestFor(paper, reviewer);
+        return Interests.NotInterested;
+    }
+    interestPriority(interest){
+        if(interest == Interests.Interested) return 2;
+        if(interest == Interests.Maybe) return 1;
+        return 0;
+    }
+    asignarRevisores(){
+        for(let i = 0; i < this._papers.length; i++){
+            let paper = this._papers[i];
+            let candidatos = [];
+            for(let j = 0; j < this._programCommittee.length; j++){
+                let reviewer = this._programCommittee[j];
+                let interest = this.interestOrDefaultFor(paper, reviewer);
+                candidatos.push({reviewer: reviewer, priority: this.interestPriority(interest)});
+            }
+            candidatos.sort(function(a, b){ return b.priority - a.priority; });
+            let asignados = [];
+            for(let k = 0; k < 3; k++){
+                asignados.push(candidatos[k].reviewer);
+            }
+            this._assignments.set(paper, asignados);
+        }
+    }
+    revisoresAsignadosPara(paper){
+        if(this._assignments.has(paper))
+            return this._assignments.get(paper);
+        return [];
     }
     calcularCargaDeRevisiones(totalArticulos, totalRevisores){
         let totalRevisiones = 3 * totalArticulos;

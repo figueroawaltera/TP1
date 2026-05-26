@@ -96,3 +96,39 @@ describe("US1.1: Cálculo de la carga de revisiones por revisor", ()=>{
         expect(carga[6]).toBe(4);
     })
 })
+
+describe("US1.2: Asignación de revisores basada en prioridades de Bidding", ()=>{
+    it("asigna los 3 revisores de mayor prioridad al Paper A", ()=>{
+        let sesion = new Session();
+        let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+        let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+        let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+        let user4 = new User("User 4", "Uni 4", "u4@mail.com", "pass");
+        let paperA = new Paper("Paper A", [user1], user1);
+        let paperB = new Paper("Paper B", [user2], user2);
+
+        sesion.addReviewer(user1);
+        sesion.addReviewer(user2);
+        sesion.addReviewer(user3);
+        sesion.addReviewer(user4);
+        sesion.submit(paperA);
+        sesion.submit(paperB);
+        sesion.closeSubmissions();
+
+        sesion.enterBid(paperA, user1, Interests.Interested);
+        sesion.enterBid(paperA, user2, Interests.Interested);
+        sesion.enterBid(paperA, user3, Interests.Maybe);
+
+        sesion.asignarRevisores();
+
+        let asignadosA = sesion.revisoresAsignadosPara(paperA);
+        expect(asignadosA).toContain(user1);
+        expect(asignadosA).toContain(user2);
+        expect(asignadosA).toContain(user3);
+        expect(asignadosA).not.toContain(user4);
+        expect(asignadosA).toHaveLength(3);
+
+        let asignadosB = sesion.revisoresAsignadosPara(paperB);
+        expect(asignadosB).toHaveLength(3);
+    })
+})
