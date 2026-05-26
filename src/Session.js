@@ -82,12 +82,16 @@ class Session{
         if(interest == Interests.Maybe) return 1;
         return 0;
     }
+    esAutor(paper, reviewer){
+        return paper.authors().includes(reviewer);
+    }
     asignarRevisores(){
         for(let i = 0; i < this._papers.length; i++){
             let paper = this._papers[i];
             let candidatos = [];
             for(let j = 0; j < this._programCommittee.length; j++){
                 let reviewer = this._programCommittee[j];
+                if(this.esAutor(paper, reviewer)) continue;
                 let interest = this.interestOrDefaultFor(paper, reviewer);
                 candidatos.push({reviewer: reviewer, priority: this.interestPriority(interest)});
             }
