@@ -72,7 +72,28 @@ describe("US1.1: Cálculo de la carga de revisiones por revisor", ()=>{
     it("con 4 artículos y 4 revisores, cada revisor tiene exactamente 3 revisiones", ()=>{
         let totalArticulos = 4;
         let totalRevisores = 4;
-        let carga = newSession.calcularCargaDeRevisiones(totalArticulos, totalRevisores);
+
+        let sesion = new Session();
+        let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+        let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+        let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+        let user4 = new User("User 4", "Uni 4", "u4@mail.com", "pass");
+        let paperA = new Paper("Paper A", [user1], user1);
+        let paperB = new Paper("Paper B", [user2], user2);
+        let paperC = new Paper("Paper C", [user3], user3);
+        let paperD = new Paper("Paper D", [user4], user4);
+        
+        newSession.addReviewer(user1)
+        newSession.addReviewer(user2)
+        newSession.addReviewer(user3)
+        newSession.addReviewer(user4)
+
+        newSession.submit(paperA)
+        newSession.submit(paperB)
+        newSession.submit(paperC)
+        newSession.submit(paperD)
+
+        let carga = newSession.calcularCargaDeRevisiones();
 
         expect(Object.keys(carga)).toHaveLength(4);
         expect(carga[0]).toBe(3);
@@ -84,7 +105,46 @@ describe("US1.1: Cálculo de la carga de revisiones por revisor", ()=>{
     it("con 10 artículos y 7 revisores, distribuye el resto: 2 revisores con 5 y 5 con 4", ()=>{
         let totalArticulos = 10;
         let totalRevisores = 7;
-        let carga = newSession.calcularCargaDeRevisiones(totalArticulos, totalRevisores);
+
+        let sesion = new Session();
+        let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+        let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+        let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+        let user4 = new User("User 4", "Uni 4", "u4@mail.com", "pass");
+        let user5 = new User("User 5", "Uni 5", "u5@mail.com", "pass");
+        let user6 = new User("User 6", "Uni 6", "u6@mail.com", "pass");
+        let user7 = new User("User 7", "Uni 7", "u7@mail.com", "pass");
+        let paperA = new Paper("Paper A", [user1], user1);
+        let paperB = new Paper("Paper B", [user2], user2);
+        let paperC = new Paper("Paper C", [user3], user3);
+        let paperD = new Paper("Paper D", [user4], user4);
+        let paperE = new Paper("Paper E", [user5], user5);
+        let paperF = new Paper("Paper F", [user6], user6);
+        let paperG = new Paper("Paper G", [user7], user7);
+        let paperH = new Paper("Paper H", [user1], user1);
+        let paperI = new Paper("Paper I", [user2], user2);
+        let paperJ = new Paper("Paper J", [user3], user3);
+        
+        newSession.addReviewer(user1)
+        newSession.addReviewer(user2)
+        newSession.addReviewer(user3)
+        newSession.addReviewer(user4)
+        newSession.addReviewer(user5)
+        newSession.addReviewer(user6)
+        newSession.addReviewer(user7)
+
+        newSession.submit(paperA)
+        newSession.submit(paperB)
+        newSession.submit(paperC)
+        newSession.submit(paperD)
+        newSession.submit(paperE)
+        newSession.submit(paperF)
+        newSession.submit(paperG)
+        newSession.submit(paperH)
+        newSession.submit(paperI)
+        newSession.submit(paperJ)
+
+        let carga = newSession.calcularCargaDeRevisiones();
 
         expect(Object.keys(carga)).toHaveLength(7);
         expect(carga[0]).toBe(5);
@@ -122,15 +182,13 @@ describe("US1.2: Asignación de revisores basada en prioridades de Bidding", ()=
 
         sesion.asignarRevisores();
 
-        let asignadosA = sesion.revisoresAsignadosPara(paperA);
-        expect(asignadosA).toContain(user1);
-        expect(asignadosA).toContain(user2);
-        expect(asignadosA).toContain(user3);
-        expect(asignadosA).not.toContain(user4);
-        expect(asignadosA).toHaveLength(3);
+        expect(sesion.assigmentExistsFor(paperA,user1)).toBe(true);
+        expect(sesion.assigmentExistsFor(paperA,user2)).toBe(true);
+        expect(sesion.assigmentExistsFor(paperA,user3)).toBe(true);
+        expect(sesion.assigmentExistsFor(paperA,user4)).toBe(false);
+        expect(sesion.assigmentsPapers(paperA)).toBe(3)
 
-        let asignadosB = sesion.revisoresAsignadosPara(paperB);
-        expect(asignadosB).toHaveLength(3);
+        expect(sesion.assigmentsPapers(paperB)).toBe(3)
     })
 })
 
@@ -160,12 +218,80 @@ describe("US1.3: Exclusión de revisores por Conflicto de Interés", ()=>{
 
         sesion.asignarRevisores();
 
-        let asignadosA = sesion.revisoresAsignadosPara(paperA);
-        expect(asignadosA).not.toContain(user1);
-        expect(asignadosA).not.toContain(user2);
-        expect(asignadosA).toContain(user3);
-        expect(asignadosA).toContain(user4);
-        expect(asignadosA).toContain(user5);
-        expect(asignadosA).toHaveLength(3);
+        expect(sesion.assigmentExistsFor(paperA,user1)).toBe(false);
+        expect(sesion.assigmentExistsFor(paperA,user2)).toBe(false);
+        expect(sesion.assigmentExistsFor(paperA,user3)).toBe(true);
+        expect(sesion.assigmentExistsFor(paperA,user4)).toBe(true);
+        expect(sesion.assigmentExistsFor(paperA,user5)).toBe(true);
+        expect(sesion.assigmentsPapers(paperA)).toBe(3)
     })
+})
+
+describe("US2.1: Registro de revisión por un revisor asignado", ()=>{
+   it("solo permite cargar una review a un artículo asignado.", ()=>{
+       let sesion = new Session();
+       let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+       let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+       let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+       let user4 = new User("User 4", "Uni 4", "u4@mail.com", "pass");
+       let paperA = new Paper("Paper A", [user1], user1);
+
+       sesion.addReviewer(user1);
+       sesion.addReviewer(user2);
+       sesion.addReviewer(user3);
+       sesion.addReviewer(user4);
+       sesion.submit(paperA);
+       sesion.closeSubmissions();
+
+       sesion.enterBid(paperA, user1, Interests.Interested);
+       sesion.enterBid(paperA, user2, Interests.Maybe);
+       sesion.enterBid(paperA, user3, Interests.Maybe);
+       sesion.enterBid(paperA, user4, Interests.NotInterested);
+       sesion.closeBidding();
+
+       sesion.asignarRevisores();
+       expect(sesion.assigmentExistsFor(paperA,user1)).toBe(false);
+       expect(sesion.assigmentExistsFor(paperA,user2)).toBe(true);
+
+       sesion.closeAssigment();
+       
+       sesion.enterReview(paperA,user2,"Rev user2",2);
+       expect(paperA.reviews()).toHaveLength(1);
+
+       let invalidReview = ()=>{sesion.enterReview(paperA,user1,"Rev user1",3)};
+       expect(invalidReview).toThrow();
+
+   })
+
+   it("solo permite cargar una review con un score entre -3 y +3.", ()=>{
+       let sesion = new Session();
+       let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+       let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+       let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+       let user4 = new User("User 4", "Uni 4", "u4@mail.com", "pass");
+       let paperA = new Paper("Paper A", [user1], user1);
+
+       sesion.addReviewer(user1);
+       sesion.addReviewer(user2);
+       sesion.addReviewer(user3);
+       sesion.addReviewer(user4);
+       sesion.submit(paperA);
+       sesion.closeSubmissions();
+
+       sesion.enterBid(paperA, user1, Interests.Interested);
+       sesion.enterBid(paperA, user2, Interests.Maybe);
+       sesion.enterBid(paperA, user3, Interests.Maybe);
+       sesion.enterBid(paperA, user4, Interests.NotInterested);
+       sesion.closeBidding();
+
+       sesion.asignarRevisores();
+       expect(sesion.assigmentExistsFor(paperA,user1)).toBe(false);
+       expect(sesion.assigmentExistsFor(paperA,user2)).toBe(true);
+
+       sesion.closeAssigment();
+
+       let invalidReview = ()=>{sesion.enterReview(paperA,user2,"Rev user2",4)};
+       expect(invalidReview).toThrow();
+
+   })
 })

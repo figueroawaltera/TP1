@@ -39,6 +39,15 @@ class Paper{
         else 
             return 0;
     }
+
+    reviewFor(reviewer){
+        return this._reviews.find( (suspect) => (suspect.reviewer()==reviewer));
+    }
+
+    reviewExistsFor(reviewer){
+        return typeof(this.reviewFor(reviewer)) != "undefined";
+    }
+
 }
 
 Paper.allowedReviews = 3;
