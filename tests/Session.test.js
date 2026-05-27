@@ -335,3 +335,41 @@ describe("US2.2: Límite de revisiones por artículo", ()=>{
 
    })
 })
+
+describe("US2.3: Cálculo automático del score del artículo", ()=>{
+    it("El score de un artículo debe calcularse como el promedio exacto de los puntajes de las revisiones que ha recibido hasta el momento.", ()=>{
+       let sesion = new Session();
+       let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+       let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+       let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+       let user4 = new User("User 4", "Uni 4", "u4@mail.com", "pass");
+       let paperA = new Paper("Paper A", [user1], user1);
+
+       sesion.addReviewer(user1);
+       sesion.addReviewer(user2);
+       sesion.addReviewer(user3);
+       sesion.addReviewer(user4);
+       sesion.submit(paperA);
+       sesion.closeSubmissions();
+
+       sesion.enterBid(paperA, user1, Interests.Interested);
+       sesion.enterBid(paperA, user2, Interests.Maybe);
+       sesion.enterBid(paperA, user3, Interests.Maybe);
+       sesion.enterBid(paperA, user4, Interests.NotInterested);
+       sesion.closeBidding();
+
+       sesion.asignarRevisores();
+       expect(sesion.assigmentExistsFor(paperA,user2)).toBe(true);
+       expect(sesion.assigmentExistsFor(paperA,user3)).toBe(true);
+       expect(sesion.assigmentExistsFor(paperA,user4)).toBe(true);
+
+       sesion.closeAssigment();
+
+       sesion.enterReview(paperA,user2,"Rev user2",2);
+       sesion.enterReview(paperA,user3,"Rev user2",-1);
+       expect(paperA.reviews()).toHaveLength(2);
+
+       expect(paperA.score()).toBe(0.5)
+
+   })
+})
