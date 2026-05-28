@@ -10,10 +10,21 @@ class Session{
         this._bids=[];
         this._stage="Receiving";
         this._assignments=[];
+        this._acceptancePercentage=0;
     }
     name(){
         return this._name;
     };
+
+    acceptancePercentage(){
+        return this._acceptancePercentage;
+    }
+
+    setAcceptancePercentage(percentage){
+        if (percentage < 0 || percentage > 100)
+            throw new Error("El porcentaje de aceptación debe estar entre 0 y 100.");
+        this._acceptancePercentage = percentage;
+    }
     
     programCommittee(){
         return this._programCommittee;
@@ -187,6 +198,12 @@ class Session{
             }
         else
             throw new Error("Cannot enter review from the current stage.");
+    }
+
+    obtenerArticulosOrdenadosPorScore(){
+        let ordenados = [...this._papers];
+        ordenados.sort(function(a, b){ return b.score() - a.score(); });
+        return ordenados;
     }
 }
 

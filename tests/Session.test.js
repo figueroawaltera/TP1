@@ -373,3 +373,56 @@ describe("US2.3: Cálculo automático del score del artículo", ()=>{
 
    })
 })
+
+describe("US3.1: Configuración del porcentaje de aceptación de la sesión", ()=>{
+    it("permite configurar un porcentaje válido y lo almacena correctamente", ()=>{
+        let sesion = new Session();
+        sesion.setAcceptancePercentage(25);
+        expect(sesion.acceptancePercentage()).toBe(25);
+    })
+
+    it("lanza un Error si el porcentaje es menor a 0", ()=>{
+        let sesion = new Session();
+        let invalidConfig = ()=>{ sesion.setAcceptancePercentage(-5) };
+        expect(invalidConfig).toThrow();
+    })
+
+    it("lanza un Error si el porcentaje es mayor a 100", ()=>{
+        let sesion = new Session();
+        let invalidConfig = ()=>{ sesion.setAcceptancePercentage(105) };
+        expect(invalidConfig).toThrow();
+    })
+})
+
+describe("US3.2: Ordenamiento de artículos por Score decreciente", ()=>{
+    it("retorna los artículos ordenados por score descendente, desempatando por orden de llegada", ()=>{
+        let sesion = new Session();
+        let user1 = new User("User 1", "Uni 1", "u1@mail.com", "pass");
+        let user2 = new User("User 2", "Uni 2", "u2@mail.com", "pass");
+        let user3 = new User("User 3", "Uni 3", "u3@mail.com", "pass");
+
+        let paperA = new Paper("Paper A", [user1], user1);
+        let paperB = new Paper("Paper B", [user2], user2);
+        let paperC = new Paper("Paper C", [user3], user3);
+
+        sesion.submit(paperA);
+        sesion.submit(paperB);
+        sesion.submit(paperC);
+
+        paperA.addReview(user2, "Rev A1", 1);
+        paperA.addReview(user3, "Rev A2", 2);
+
+        paperB.addReview(user1, "Rev B1", 2);
+        paperB.addReview(user3, "Rev B2", 3);
+
+        paperC.addReview(user1, "Rev C1", 1);
+        paperC.addReview(user2, "Rev C2", 2);
+
+        let ordenados = sesion.obtenerArticulosOrdenadosPorScore();
+
+        expect(ordenados).toHaveLength(3);
+        expect(ordenados[0]).toBe(paperB);
+        expect(ordenados[1]).toBe(paperA);
+        expect(ordenados[2]).toBe(paperC);
+    })
+})
