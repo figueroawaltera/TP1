@@ -31,4 +31,10 @@ describe("A Paper", ()=>{
         paper.addReview(matias, "Paper is awesome", 3);
         expect(paper.score()).toBeCloseTo(-0.66666);
     })
+    it("deberia tener un título", ()=>{
+        expect(paper.title()).not.toBeUndefined()
+    })
+    it("deberia tener autor encargado.", ()=>{
+        expect(paper.correspondingAuthor()).not.toBeUndefined()
+    })
 })

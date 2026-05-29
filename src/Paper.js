@@ -33,18 +33,19 @@ class Paper{
         return this.reviews().length;
     }
     score(final = false){
+        let sum = this.reviews().reduce( (partialSum, review) => partialSum + review.score(), 0 );
         if (final == false){
             if (this.reviewsCount() > 0){
-                let sum = this.reviews().reduce( (partialSum, review) => partialSum + review.score(), 0 );
                 return sum / this.reviewsCount();
-            }else{ 
+            }else{
                 return 0;
             }
         }else{
-            let sum = this.reviews().reduce( (partialSum, review) => partialSum + review.score(), 0 );
             if (this.reviewsCount() < 3){
                 sum += (3 - this.reviewsCount()) * -3
                 return sum / 3
+            } else {
+                return sum / this.reviewsCount();
             }
         }
     }

@@ -45,11 +45,11 @@ class Session{
             return false;
     }
     
-    submit(paper){
-        if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
-        
-        if (this.stage() == "Receiving" )
+    submit(paper){        
+        if (this.stage() == "Receiving" ){
+            if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
             this._papers.push(paper);
+        }
         else
             throw new Error("Cannot submit papers at this stage");
     }
@@ -88,6 +88,10 @@ class Session{
 
     closeAssigment(){
         this.setStage("Revision")
+    }
+
+    closeRevision(){
+        this.setStage("Selection")
     }
     
     enterBid(paper, reviewer, interest){
@@ -133,12 +137,14 @@ class Session{
     }
     
     enterAssigment(paper, reviewer){
-        if (!this.assigmentExistsFor(paper, reviewer)){
-            let asignacion = new Assigment(paper, reviewer);
-            this._assignments.push(asignacion);
+        if (this.stage() == "Assigment" ){
+            if (!this.assigmentExistsFor(paper, reviewer)){
+                let asignacion = new Assigment(paper, reviewer);
+                this._assignments.push(asignacion);
             }
-            else
-                throw new Error("Asignación ya existe para el par (paper,reviewer) ingresado.");
+            else throw new Error("Asignación ya existe para el par (paper,reviewer) ingresado.");
+        } else throw new Error("Cannot assigment from the current stage.");
+        
     }
     
     assigmentExistsFor(paper, reviewer){
@@ -150,21 +156,23 @@ class Session{
     }
     
     asignarRevisores(){
-        for(let i = 0; i < this._papers.length; i++){
-            let paper = this._papers[i];
-            let candidatos = [];
-            for(let j = 0; j < this._programCommittee.length; j++){
-                let reviewer = this._programCommittee[j];
-                if(this.esAutor(paper, reviewer)) continue;
-                let interest = this.interestOrDefaultFor(paper, reviewer);
-                candidatos.push({reviewer: reviewer, priority: this.interestPriority(interest)});
+        if (this.stage() == "Assigment" ){
+            for(let i = 0; i < this._papers.length; i++){
+                let paper = this._papers[i];
+                let candidatos = [];
+                for(let j = 0; j < this._programCommittee.length; j++){
+                    let reviewer = this._programCommittee[j];
+                    if(this.esAutor(paper, reviewer)) continue;
+                    let interest = this.interestOrDefaultFor(paper, reviewer);
+                    candidatos.push({reviewer: reviewer, priority: this.interestPriority(interest)});
+                }
+                candidatos.sort(function(a, b){ return b.priority - a.priority; });
+                let asignados = [];
+                for(let k = 0; k < 3; k++){
+                    this.enterAssigment(paper,candidatos[k].reviewer)
+                }
             }
-            candidatos.sort(function(a, b){ return b.priority - a.priority; });
-            let asignados = [];
-            for(let k = 0; k < 3; k++){
-                this.enterAssigment(paper,candidatos[k].reviewer)
-            }
-        }
+        } else throw new Error("Cannot assigment from the current stage.");
     }
 
     calcularCargaDeRevisiones(){
