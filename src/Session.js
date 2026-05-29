@@ -10,10 +10,21 @@ class Session{
         this._bids=[];
         this._stage="Receiving";
         this._assignments=[];
+        this._acceptancePercentage=0;
     }
     name(){
         return this._name;
     };
+
+    acceptancePercentage(){
+        return this._acceptancePercentage;
+    }
+
+    setAcceptancePercentage(percentage){
+        if (percentage < 0 || percentage > 100)
+            throw new Error("El porcentaje de aceptación debe estar entre 0 y 100.");
+        this._acceptancePercentage = percentage;
+    }
     
     programCommittee(){
         return this._programCommittee;
@@ -34,11 +45,11 @@ class Session{
             return false;
     }
     
-    submit(paper){
-        if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
-        
-        if (this.stage() == "Receiving" )
+    submit(paper){        
+        if (this.stage() == "Receiving" ){
+            if (!this.canSubmit(paper)) throw new Error("Cannot submit invalid paper");
             this._papers.push(paper);
+        }
         else
             throw new Error("Cannot submit papers at this stage");
     }
@@ -77,6 +88,10 @@ class Session{
 
     closeAssigment(){
         this.setStage("Revision")
+    }
+
+    closeRevision(){
+        this.setStage("Selection")
     }
     
     enterBid(paper, reviewer, interest){
@@ -122,12 +137,14 @@ class Session{
     }
     
     enterAssigment(paper, reviewer){
-        if (!this.assigmentExistsFor(paper, reviewer)){
-            let asignacion = new Assigment(paper, reviewer);
-            this._assignments.push(asignacion);
+        if (this.stage() == "Assigment" ){
+            if (!this.assigmentExistsFor(paper, reviewer)){
+                let asignacion = new Assigment(paper, reviewer);
+                this._assignments.push(asignacion);
             }
-            else
-                throw new Error("Asignación ya existe para el par (paper,reviewer) ingresado.");
+            else throw new Error("Asignación ya existe para el par (paper,reviewer) ingresado.");
+        } else throw new Error("Cannot assigment from the current stage.");
+        
     }
     
     assigmentExistsFor(paper, reviewer){
@@ -139,21 +156,23 @@ class Session{
     }
     
     asignarRevisores(){
-        for(let i = 0; i < this._papers.length; i++){
-            let paper = this._papers[i];
-            let candidatos = [];
-            for(let j = 0; j < this._programCommittee.length; j++){
-                let reviewer = this._programCommittee[j];
-                if(this.esAutor(paper, reviewer)) continue;
-                let interest = this.interestOrDefaultFor(paper, reviewer);
-                candidatos.push({reviewer: reviewer, priority: this.interestPriority(interest)});
+        if (this.stage() == "Assigment" ){
+            for(let i = 0; i < this._papers.length; i++){
+                let paper = this._papers[i];
+                let candidatos = [];
+                for(let j = 0; j < this._programCommittee.length; j++){
+                    let reviewer = this._programCommittee[j];
+                    if(this.esAutor(paper, reviewer)) continue;
+                    let interest = this.interestOrDefaultFor(paper, reviewer);
+                    candidatos.push({reviewer: reviewer, priority: this.interestPriority(interest)});
+                }
+                candidatos.sort(function(a, b){ return b.priority - a.priority; });
+                let asignados = [];
+                for(let k = 0; k < 3; k++){
+                    this.enterAssigment(paper,candidatos[k].reviewer)
+                }
             }
-            candidatos.sort(function(a, b){ return b.priority - a.priority; });
-            let asignados = [];
-            for(let k = 0; k < 3; k++){
-                this.enterAssigment(paper,candidatos[k].reviewer)
-            }
-        }
+        } else throw new Error("Cannot assigment from the current stage.");
     }
 
     calcularCargaDeRevisiones(){
@@ -187,6 +206,37 @@ class Session{
             }
         else
             throw new Error("Cannot enter review from the current stage.");
+    }
+
+    obtenerArticulosOrdenadosPorScore(){
+        let ordenados = [...this._papers];
+        ordenados.sort(function(a, b){ return b.score(true) - a.score(true); });
+        return ordenados;
+    }
+
+    cantidadArticulosAAceptar(){
+        return Math.floor(this._papers.length * (this._acceptancePercentage / 100))
+    }
+
+    getPaper(paper){
+        return this._papers.find( (suspect) => (suspect == paper));
+    }
+
+    obtenerArticulosAceptados(){
+        let ordenados = this.obtenerArticulosOrdenadosPorScore()
+        let cantidadArticulosAAceptar = this.cantidadArticulosAAceptar()
+        let cantidadArticulosAceptados = 0
+        let paperOrigin
+        for(let i = 0; i < ordenados.length; i++){
+            paperOrigin = this.getPaper(ordenados[i])
+            if (cantidadArticulosAceptados < cantidadArticulosAAceptar && paperOrigin.score(true) >= 1){
+                paperOrigin.acceptPaper()
+                cantidadArticulosAceptados = this._papers.filter((suspect) => suspect.isAccepted() == true).length;
+            } else {
+                paperOrigin.declinePaper()
+            }
+        }
+        return this._papers.filter((suspect) => suspect.isAccepted() == true);
     }
 }
 
