@@ -32,21 +32,23 @@ class Paper{
     reviewsCount(){
         return this.reviews().length;
     }
-    score(final = false){
+    score(){
         let sum = this.reviews().reduce( (partialSum, review) => partialSum + review.score(), 0 );
-        if (final == false){
-            if (this.reviewsCount() > 0){
-                return sum / this.reviewsCount();
-            }else{
-                return 0;
-            }
+        if (this.reviewsCount() > 0){
+            return sum / this.reviewsCount();
         }else{
-            if (this.reviewsCount() < 3){
-                sum += (3 - this.reviewsCount()) * -3
-                return sum / 3
-            } else {
-                return sum / this.reviewsCount();
-            }
+            return 0;
+        }
+        
+    }
+
+    finalScore(){
+        let sum = this.reviews().reduce( (partialSum, review) => partialSum + review.score(), 0 );
+        if (this.reviewsCount() < 3){
+            sum += (3 - this.reviewsCount()) * -3
+            return sum / 3
+        } else {
+            return sum / this.reviewsCount();
         }
     }
 
@@ -68,6 +70,10 @@ class Paper{
 
     isAccepted(){
         return this._accepted
+    }
+
+    esAutor(reviewer){
+        return this.authors().includes(reviewer);
     }
 
 }
